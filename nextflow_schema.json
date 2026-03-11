@@ -2,9 +2,9 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
     "title": "wf-backup",
-    "workflow_title": "Backup Workflow",
+    "workflow_title": "wf-backup",
     "description": "Robust backup workflow for ONT and EPI2ME data.",
-    "url": "https://github.com/epi2me-labs/wf-backup",
+    "url": "https://github.com/biomlds/wf-template",
     "type": "object",
     "definitions": {
         "ont_data": {
