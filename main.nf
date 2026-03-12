@@ -21,6 +21,8 @@ process buildRsyncContainer {
 
 process getVersions {
     label "wfbackup"
+    input:
+        val build_done
     publishDir "${params.out_dir}", mode: 'copy', pattern: "versions.txt"
     cpus 1
     
@@ -37,6 +39,7 @@ process backupOntData {
     label "wfbackup"
     
     input:
+        val build_done
         val source_path
         val dest_path
         val delete_source
@@ -105,6 +108,7 @@ process backupEpi2meData {
     label "wfbackup"
     
     input:
+        val build_done
         val source_path
         val dest_path
         val delete_source
@@ -208,11 +212,11 @@ workflow pipeline {
         epi2me_data_input
 
     main:
-        // Build container first - force completion before continuing
-        buildRsyncContainer().out.built.view()
+        // Build container - returns channel
+        build_done = buildRsyncContainer()
         
-        // Now run other processes - they will naturally wait
-        software_versions = getVersions()
+        // These receive the build_done channel - creates dependency
+        software_versions = getVersions(build_done)
         workflow_params = getParams()
 
         ont_results = null
@@ -220,6 +224,7 @@ workflow pipeline {
 
         if (ont_data_input) {
             ont_results = backupOntData(
+                build_done,
                 ont_data_input.source,
                 ont_data_input.dest,
                 params.delete_source
@@ -228,6 +233,7 @@ workflow pipeline {
 
         if (epi2me_data_input) {
             epi2me_results = backupEpi2meData(
+                build_done,
                 epi2me_data_input.source,
                 epi2me_data_input.dest,
                 params.delete_source
