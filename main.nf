@@ -10,11 +10,14 @@ include {
 
 process getVersions {
     label "wfbackup"
-    beforeScript '''
+    input:
+        val dockerfile_path
+    
+    beforeScript """
     if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f ${projectDir}/docker/rsync/Dockerfile ${projectDir}/docker/rsync/
+        docker build -t wf-rsync:latest -f $dockerfile_path $(dirname $dockerfile_path)
     fi
-    '''
+    """
     publishDir "${params.out_dir}", mode: 'copy', pattern: "versions.txt"
     cpus 1
     
@@ -29,19 +32,20 @@ process getVersions {
 
 process backupOntData {
     label "wfbackup"
-    beforeScript '''
-    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f ${projectDir}/docker/rsync/Dockerfile ${projectDir}/docker/rsync/
-    fi
-    '''
-    publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_ont_data.json"
-    cpus 1
-    memory "1 GB"
-
     input:
+        val dockerfile_path
         val source_path
         val dest_path
         val delete_source
+    
+    beforeScript """
+    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
+        docker build -t wf-rsync:latest -f $dockerfile_path $(dirname $dockerfile_path)
+    fi
+    """
+    publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_ont_data.json"
+    cpus 1
+    memory "1 GB"
 
     output:
         path "manifest_ont_data.json", emit: manifest
@@ -101,19 +105,20 @@ process backupOntData {
 
 process backupEpi2meData {
     label "wfbackup"
-    beforeScript '''
-    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f ${projectDir}/docker/rsync/Dockerfile ${projectDir}/docker/rsync/
-    fi
-    '''
-    publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_epi2me_data.json"
-    cpus 1
-    memory "1 GB"
-
     input:
+        val dockerfile_path
         val source_path
         val dest_path
         val delete_source
+    
+    beforeScript """
+    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
+        docker build -t wf-rsync:latest -f $dockerfile_path $(dirname $dockerfile_path)
+    fi
+    """
+    publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_epi2me_data.json"
+    cpus 1
+    memory "1 GB"
 
     output:
         path "manifest_epi2me_data.json", emit: manifest
@@ -210,7 +215,9 @@ workflow pipeline {
         epi2me_data_input
 
     main:
-        software_versions = getVersions()
+        def dockerfile_path = "${projectDir}/docker/rsync/Dockerfile"
+        
+        software_versions = getVersions(dockerfile_path)
         workflow_params = getParams()
 
         ont_results = null
@@ -218,6 +225,7 @@ workflow pipeline {
 
         if (ont_data_input) {
             ont_results = backupOntData(
+                dockerfile_path,
                 ont_data_input.source,
                 ont_data_input.dest,
                 params.delete_source
@@ -226,6 +234,7 @@ workflow pipeline {
 
         if (epi2me_data_input) {
             epi2me_results = backupEpi2meData(
+                dockerfile_path,
                 epi2me_data_input.source,
                 epi2me_data_input.dest,
                 params.delete_source
