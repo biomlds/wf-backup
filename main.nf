@@ -215,7 +215,7 @@ workflow pipeline {
     main:
         build_result = buildRsyncContainer()
         
-        software_versions = getVersions(build_result.out.built)
+        software_versions = getVersions(build_result.out.built.collect())
         workflow_params = getParams()
 
         ont_results = null
@@ -223,7 +223,7 @@ workflow pipeline {
 
         if (ont_data_input) {
             ont_results = backupOntData(
-                build_result.out.built,
+                build_result.out.built.collect(),
                 ont_data_input.source,
                 ont_data_input.dest,
                 params.delete_source
@@ -232,7 +232,7 @@ workflow pipeline {
 
         if (epi2me_data_input) {
             epi2me_results = backupEpi2meData(
-                build_result.out.built,
+                build_result.out.built.collect(),
                 epi2me_data_input.source,
                 epi2me_data_input.dest,
                 params.delete_source
