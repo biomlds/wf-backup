@@ -10,15 +10,13 @@ include {
 
 process getVersions {
     label "wfbackup"
-    environment {
-        DOCKERFILE_PATH = "${projectDir}/docker/rsync/Dockerfile"
-    }
     
     beforeScript '''
-    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
-    fi
-    '''
+export DOCKERFILE_PATH="${projectDir}/docker/rsync/Dockerfile"
+if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
+    docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
+fi
+'''
     publishDir "${params.out_dir}", mode: 'copy', pattern: "versions.txt"
     cpus 1
     
@@ -33,9 +31,6 @@ process getVersions {
 
 process backupOntData {
     label "wfbackup"
-    environment {
-        DOCKERFILE_PATH = "${projectDir}/docker/rsync/Dockerfile"
-    }
     
     input:
         val source_path
@@ -43,10 +38,11 @@ process backupOntData {
         val delete_source
     
     beforeScript '''
-    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
-    fi
-    '''
+export DOCKERFILE_PATH="${projectDir}/docker/rsync/Dockerfile"
+if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
+    docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
+fi
+'''
     publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_ont_data.json"
     cpus 1
     memory "1 GB"
@@ -109,9 +105,6 @@ process backupOntData {
 
 process backupEpi2meData {
     label "wfbackup"
-    environment {
-        DOCKERFILE_PATH = "${projectDir}/docker/rsync/Dockerfile"
-    }
     
     input:
         val source_path
@@ -119,10 +112,11 @@ process backupEpi2meData {
         val delete_source
     
     beforeScript '''
-    if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
-    fi
-    '''
+export DOCKERFILE_PATH="${projectDir}/docker/rsync/Dockerfile"
+if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
+    docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
+fi
+'''
     publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_epi2me_data.json"
     cpus 1
     memory "1 GB"
