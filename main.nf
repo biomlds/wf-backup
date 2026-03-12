@@ -40,7 +40,6 @@ process backupOntData {
     script:
     String dest_dir = "${dest_path}/ont_data"
     """
-    export RSYNC_DONT_LOOKUP_UIDS=1
     mkdir -p "$dest_dir"
 
     echo "Starting ONT data backup..." > backup_ont.log
@@ -108,7 +107,6 @@ process backupEpi2meData {
     script:
     String dest_dir = "${dest_path}/epi2me_data"
     """
-    export RSYNC_DONT_LOOKUP_UIDS=1
     mkdir -p "$dest_dir"
 
     echo "Starting EPI2ME data backup..." > backup_epi2me.log
