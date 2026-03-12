@@ -48,7 +48,7 @@ process backupOntData {
     echo "" >> backup_ont.log
 
     echo "Step 1: Initial rsync copy (excluding pod5)..." >> backup_ont.log
-    rsync -av --exclude='pod5' "$source_path/" "$dest_dir/" >> backup_ont.log 2>&1
+    rsync -av --no-owner --no-group --exclude='pod5' "$source_path/" "$dest_dir/" >> backup_ont.log 2>&1
     RSYNC_INIT_EXIT=\$?
 
     if [ \$RSYNC_INIT_EXIT -ne 0 ]; then
@@ -59,7 +59,7 @@ process backupOntData {
     echo "" >> backup_ont.log
 
     echo "Step 2: Verification rsync with checksum..." >> backup_ont.log
-    rsync -avc --checksum "$source_path/" "$dest_dir/" >> backup_ont.log 2>&1
+    rsync -avc --no-owner --no-group --checksum "$source_path/" "$dest_dir/" >> backup_ont.log 2>&1
     RSYNC_VERIFY_EXIT=\$?
 
     if [ \$RSYNC_VERIFY_EXIT -ne 0 ]; then
@@ -76,7 +76,7 @@ process backupOntData {
 
     if [ "$delete_source" = "true" ]; then
         echo "Step 4: Deleting source files (backup verified)..." >> backup_ont.log
-        rsync -av --exclude='pod5' --delete "$source_path/" /tmp/ont_backup_temp/ >> backup_ont.log 2>&1
+        rsync -av --no-owner --no-group --exclude='pod5' --delete "$source_path/" /tmp/ont_backup_temp/ >> backup_ont.log 2>&1
         rm -rf "$source_path"
         echo "Source files deleted." >> backup_ont.log
     else
@@ -115,7 +115,7 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 1: Initial rsync copy (first-level files only)..." >> backup_epi2me.log
-    rsync -av --include='*' --exclude='*/*' "$source_path/" "$dest_dir/" >> backup_epi2me.log 2>&1
+    rsync -av --no-owner --no-group --include='*' --exclude='*/*' "$source_path/" "$dest_dir/" >> backup_epi2me.log 2>&1
     RSYNC_INIT_EXIT=\$?
 
     if [ \$RSYNC_INIT_EXIT -ne 0 ]; then
@@ -126,7 +126,7 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 2: Verification rsync with checksum..." >> backup_epi2me.log
-    rsync -avc --checksum --include='*' --exclude='*/*' "$source_path/" "$dest_dir/" >> backup_epi2me.log 2>&1
+    rsync -avc --no-owner --no-group --checksum --include='*' --exclude='*/*' "$source_path/" "$dest_dir/" >> backup_epi2me.log 2>&1
     RSYNC_VERIFY_EXIT=\$?
 
     if [ \$RSYNC_VERIFY_EXIT -ne 0 ]; then
@@ -137,14 +137,13 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 3: Generating manifest..." >> backup_epi2me.log
-    echo "Step 3: Generating manifest..." >> backup_epi2me.log
     generate_manifest.sh manifest_epi2me_data.json "epi2me_data" "$dest_dir" 1
     echo "Manifest created." >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
     if [ "$delete_source" = "true" ]; then
         echo "Step 4: Deleting source files (backup verified)..." >> backup_epi2me.log
-        rsync -av --include='*' --exclude='*/*' --delete "$source_path/" /tmp/epi2me_backup_temp/ >> backup_epi2me.log 2>&1
+        rsync -av --no-owner --no-group --include='*' --exclude='*/*' --delete "$source_path/" /tmp/epi2me_backup_temp/ >> backup_epi2me.log 2>&1
         rm -rf "$source_path"
         echo "Source files deleted." >> backup_epi2me.log
     else
