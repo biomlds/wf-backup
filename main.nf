@@ -208,7 +208,11 @@ workflow pipeline {
         epi2me_data_input
 
     main:
-        software_versions = getVersions()
+        // Build container first (runs on host)
+        build_result = buildRsyncContainer()
+        
+        // These wait for build to complete
+        software_versions = getVersions().mix(build_result.out.built)
         workflow_params = getParams()
 
         ont_results = null
@@ -219,7 +223,7 @@ workflow pipeline {
                 ont_data_input.source,
                 ont_data_input.dest,
                 params.delete_source
-            )
+            ).mix(build_result.out.built)
         }
 
         if (epi2me_data_input) {
@@ -227,7 +231,7 @@ workflow pipeline {
                 epi2me_data_input.source,
                 epi2me_data_input.dest,
                 params.delete_source
-            )
+            ).mix(build_result.out.built)
         }
 
         ont_manifest = ont_results ? ont_results.manifest : file("$projectDir/data/OPTIONAL_FILE")
@@ -254,48 +258,41 @@ workflow pipeline {
 WorkflowMain.initialise(workflow, params, log)
 
 workflow {
-    if (params.build_container) {
-        // Build container only
-        Pinguscript.ping_start(nextflow, workflow, params)
-        buildRsyncContainer()
-    } else {
-        // Run normal workflow
-        Pinguscript.ping_start(nextflow, workflow, params)
+    Pinguscript.ping_start(nextflow, workflow, params)
 
-        def ont_input = null
-        def epi2me_input = null
+    def ont_input = null
+    def epi2me_input = null
 
-        if (params.ont_data) {
-            ont_input = [
-                source: params.ont_data,
-                dest: params.ont_data_dest
-            ]
-        }
-
-        if (params.epi2me_data) {
-            epi2me_input = [
-                source: params.epi2me_data,
-                dest: params.epi2me_data_dest
-            ]
-        }
-
-        if (!ont_input && !epi2me_input) {
-            log.error "No input data specified. Please provide --ont_data and/or --epi2me_data"
-            exit 1
-        }
-
-        if (ont_input && !params.ont_data_dest) {
-            log.error "ONT data destination not specified. Please provide --ont_data_dest"
-            exit 1
-        }
-
-        if (epi2me_input && !params.epi2me_data_dest) {
-            log.error "EPI2ME data destination not specified. Please provide --epi2me_data_dest"
-            exit 1
-        }
-
-        pipeline(ont_input, epi2me_input)
+    if (params.ont_data) {
+        ont_input = [
+            source: params.ont_data,
+            dest: params.ont_data_dest
+        ]
     }
+
+    if (params.epi2me_data) {
+        epi2me_input = [
+            source: params.epi2me_data,
+            dest: params.epi2me_data_dest
+        ]
+    }
+
+    if (!ont_input && !epi2me_input) {
+        log.error "No input data specified. Please provide --ont_data and/or --epi2me_data"
+        exit 1
+    }
+
+    if (ont_input && !params.ont_data_dest) {
+        log.error "ONT data destination not specified. Please provide --ont_data_dest"
+        exit 1
+    }
+
+    if (epi2me_input && !params.epi2me_data_dest) {
+        log.error "EPI2ME data destination not specified. Please provide --epi2me_data_dest"
+        exit 1
+    }
+
+    pipeline(ont_input, epi2me_input)
 }
 
 workflow.onComplete {
