@@ -10,12 +10,13 @@ include {
 
 process getVersions {
     label "wfbackup"
-    input:
-        val dockerfile_path
+    environment {
+        DOCKERFILE_PATH = "${projectDir}/docker/rsync/Dockerfile"
+    }
     
     beforeScript '''
     if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f $dockerfile_path $(dirname $dockerfile_path)
+        docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
     fi
     '''
     publishDir "${params.out_dir}", mode: 'copy', pattern: "versions.txt"
@@ -32,15 +33,18 @@ process getVersions {
 
 process backupOntData {
     label "wfbackup"
+    environment {
+        DOCKERFILE_PATH = "${projectDir}/docker/rsync/Dockerfile"
+    }
+    
     input:
-        val dockerfile_path
         val source_path
         val dest_path
         val delete_source
     
     beforeScript '''
     if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f $dockerfile_path $(dirname $dockerfile_path)
+        docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
     fi
     '''
     publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_ont_data.json"
@@ -105,15 +109,18 @@ process backupOntData {
 
 process backupEpi2meData {
     label "wfbackup"
+    environment {
+        DOCKERFILE_PATH = "${projectDir}/docker/rsync/Dockerfile"
+    }
+    
     input:
-        val dockerfile_path
         val source_path
         val dest_path
         val delete_source
     
     beforeScript '''
     if ! docker image inspect wf-rsync:latest > /dev/null 2>&1; then
-        docker build -t wf-rsync:latest -f $dockerfile_path $(dirname $dockerfile_path)
+        docker build -t wf-rsync:latest -f $DOCKERFILE_PATH $(dirname $DOCKERFILE_PATH)
     fi
     '''
     publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_epi2me_data.json"
@@ -215,9 +222,7 @@ workflow pipeline {
         epi2me_data_input
 
     main:
-        def dockerfile_path = "${projectDir}/docker/rsync/Dockerfile"
-        
-        software_versions = getVersions(dockerfile_path)
+        software_versions = getVersions()
         workflow_params = getParams()
 
         ont_results = null
@@ -225,7 +230,6 @@ workflow pipeline {
 
         if (ont_data_input) {
             ont_results = backupOntData(
-                dockerfile_path,
                 ont_data_input.source,
                 ont_data_input.dest,
                 params.delete_source
@@ -234,7 +238,6 @@ workflow pipeline {
 
         if (epi2me_data_input) {
             epi2me_results = backupEpi2meData(
-                dockerfile_path,
                 epi2me_data_input.source,
                 epi2me_data_input.dest,
                 params.delete_source
