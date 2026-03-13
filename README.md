@@ -98,7 +98,7 @@ the command line see https://labs.epi2me.io/wfquickstart/
 
 | Nextflow parameter name  | Type | Description | Help | Default |
 |-------------------------|------|-------------|------|---------|
-| delete_source | boolean | Delete source files after successful backup | Delete source files only after rsync with checksum verification passes. | False |
+| backup_options.delete_source | boolean | Delete source files after successful backup | Delete source files only after rsync with checksum verification passes. The source folder is deleted and recreated as an empty directory. | False |
 
 ### Output Options
 
@@ -135,15 +135,13 @@ output/
 
 The workflow performs the following steps for each data source:
 
-1. **Initial rsync copy**: Copies all files from source to destination
+1. **rsync with checksum verification**: Uses `rsync -avc --checksum` to copy and verify files in a single step
    - ONT: Excludes `pod5` folder
-   - EPI2ME: Only copies first-level files (no subdirectories)
+   - EPI2ME: Full recursive copy
 
-2. **Verification rsync**: Uses `rsync -c --checksum` to verify file contents match
+2. **Manifest generation**: Creates JSON manifest with MD5 checksums for each backed up file
 
-3. **Manifest generation**: Creates JSON manifest with MD5 checksums for each backed up file
-
-4. **Optional source deletion**: If `--delete_source` is enabled and verification passed, deletes source files
+3. **Optional source deletion**: If `--backup_options.delete_source` is enabled and backup succeeded, the source folder is deleted and recreated as an empty directory
 
 
 
