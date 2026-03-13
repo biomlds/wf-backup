@@ -39,6 +39,8 @@ process getVersions {
 process backupOntData {
     label "wfbackup"
     
+    containerOptions { "-v ${source_path}:/home/wfrsync/source -v ${dest_path}:/home/wfrsync/dest" }
+    
     input:
         val build_done
         val source_path
@@ -55,17 +57,18 @@ process backupOntData {
         val true, emit: success
 
     script:
-    String dest_dir = "${dest_path}/ont_data"
+    String src = "/home/wfrsync/source"
+    String dst = "/home/wfrsync/dest/ont_data"
     """
-    mkdir -p "$dest_dir"
+    mkdir -p "$dst"
 
     echo "Starting ONT data backup..." > backup_ont.log
     echo "Source: $source_path" >> backup_ont.log
-    echo "Destination: $dest_dir" >> backup_ont.log
+    echo "Destination: $dst" >> backup_ont.log
     echo "" >> backup_ont.log
 
     echo "Step 1: Initial rsync copy (excluding pod5)..." >> backup_ont.log
-    rsync -av --no-owner --no-group --numeric-ids --exclude='pod5' "$source_path/" "$dest_dir/" >> backup_ont.log 2>&1
+    rsync -av --no-owner --no-group --numeric-ids --exclude='pod5' "$src/" "$dst/" >> backup_ont.log 2>&1
     RSYNC_INIT_EXIT=\$?
 
     if [ \$RSYNC_INIT_EXIT -ne 0 ]; then
@@ -76,7 +79,7 @@ process backupOntData {
     echo "" >> backup_ont.log
 
     echo "Step 2: Verification rsync with checksum..." >> backup_ont.log
-    rsync -avc --no-owner --no-group --numeric-ids --checksum "$source_path/" "$dest_dir/" >> backup_ont.log 2>&1
+    rsync -avc --no-owner --no-group --numeric-ids --checksum "$src/" "$dst/" >> backup_ont.log 2>&1
     RSYNC_VERIFY_EXIT=\$?
 
     if [ \$RSYNC_VERIFY_EXIT -ne 0 ]; then
@@ -87,14 +90,14 @@ process backupOntData {
     echo "" >> backup_ont.log
 
     echo "Step 3: Generating manifest..." >> backup_ont.log
-    generate_manifest.sh manifest_ont_data.json "ont_data" "$dest_dir"
+    generate_manifest.sh manifest_ont_data.json "ont_data" "$dst"
     echo "Manifest created." >> backup_ont.log
     echo "" >> backup_ont.log
 
     if [ "$delete_source" = "true" ]; then
         echo "Step 4: Deleting source files (backup verified)..." >> backup_ont.log
-        rsync -av --no-owner --no-group --numeric-ids --exclude='pod5' --delete "$source_path/" /tmp/ont_backup_temp/ >> backup_ont.log 2>&1
-        rm -rf "$source_path"
+        rsync -av --no-owner --no-group --numeric-ids --exclude='pod5' --delete "$src/" /tmp/ont_backup_temp/ >> backup_ont.log 2>&1
+        rm -rf "$src"
         echo "Source files deleted." >> backup_ont.log
     else
         echo "Step 4: Skipping source deletion (delete_source=false)." >> backup_ont.log
@@ -107,6 +110,8 @@ process backupOntData {
 
 process backupEpi2meData {
     label "wfbackup"
+    
+    containerOptions { "-v ${source_path}:/home/wfrsync/source -v ${dest_path}:/home/wfrsync/dest" }
     
     input:
         val build_done
@@ -124,17 +129,18 @@ process backupEpi2meData {
         val true, emit: success
 
     script:
-    String dest_dir = "${dest_path}/epi2me_data"
+    String src = "/home/wfrsync/source"
+    String dst = "/home/wfrsync/dest/epi2me_data"
     """
-    mkdir -p "$dest_dir"
+    mkdir -p "$dst"
 
     echo "Starting EPI2ME data backup..." > backup_epi2me.log
     echo "Source: $source_path" >> backup_epi2me.log
-    echo "Destination: $dest_dir" >> backup_epi2me.log
+    echo "Destination: $dst" >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
     echo "Step 1: Initial rsync copy (first-level files only)..." >> backup_epi2me.log
-    rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' "$source_path/" "$dest_dir/" >> backup_epi2me.log 2>&1
+    rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' "$src/" "$dst/" >> backup_epi2me.log 2>&1
     RSYNC_INIT_EXIT=\$?
 
     if [ \$RSYNC_INIT_EXIT -ne 0 ]; then
@@ -145,7 +151,7 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 2: Verification rsync with checksum..." >> backup_epi2me.log
-    rsync -avc --no-owner --no-group --numeric-ids --checksum --include='*' --exclude='*/*' "$source_path/" "$dest_dir/" >> backup_epi2me.log 2>&1
+    rsync -avc --no-owner --no-group --numeric-ids --checksum --include='*' --exclude='*/*' "$src/" "$dst/" >> backup_epi2me.log 2>&1
     RSYNC_VERIFY_EXIT=\$?
 
     if [ \$RSYNC_VERIFY_EXIT -ne 0 ]; then
@@ -156,14 +162,14 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 3: Generating manifest..." >> backup_epi2me.log
-    generate_manifest.sh manifest_epi2me_data.json "epi2me_data" "$dest_dir" 1
+    generate_manifest.sh manifest_epi2me_data.json "epi2me_data" "$dst" 1
     echo "Manifest created." >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
     if [ "$delete_source" = "true" ]; then
         echo "Step 4: Deleting source files (backup verified)..." >> backup_epi2me.log
-        rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' --delete "$source_path/" /tmp/epi2me_backup_temp/ >> backup_epi2me.log 2>&1
-        rm -rf "$source_path"
+        rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' --delete "$src/" /tmp/epi2me_backup_temp/ >> backup_epi2me.log 2>&1
+        rm -rf "$src"
         echo "Source files deleted." >> backup_epi2me.log
     else
         echo "Step 4: Skipping source deletion (delete_source=false)." >> backup_epi2me.log
