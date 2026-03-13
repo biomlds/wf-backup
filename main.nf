@@ -30,7 +30,7 @@ process getVersions {
         path "versions.txt"
     script:
     """
-    RSYNC_VER=\$(rsync --version 2>&1 | head -1)
+    RSYNC_VER=\$(rsync --version 2>&1 | head -1) || true
     echo "rsync,\$RSYNC_VER" >> versions.txt
     """
 }
@@ -184,10 +184,10 @@ process makeReport {
     label "wf_common"
     publishDir "${params.out_dir}", mode: 'copy', pattern: "wf-backup-report.html"
     input:
-        path ont_manifest
-        path epi2me_manifest
-        path ont_log
-        path epi2me_log
+        path ont_manifest, optional: true
+        path epi2me_manifest, optional: true
+        path ont_log, optional: true
+        path epi2me_log, optional: true
         path "versions/*"
         path "params.json"
         val wf_version
@@ -196,10 +196,10 @@ process makeReport {
         path "wf-backup-report.html"
 
     script:
-    String ont_manifest_arg = ont_manifest.exists() ? "--ont_manifest $ont_manifest" : ""
-    String epi2me_manifest_arg = epi2me_manifest.exists() ? "--epi2me_manifest $epi2me_manifest" : ""
-    String ont_log_arg = ont_log.exists() ? "--ont_log $ont_log" : ""
-    String epi2me_log_arg = epi2me_log.exists() ? "--epi2me_log $epi2me_log" : ""
+    String ont_manifest_arg = ont_manifest && ont_manifest.exists() ? "--ont_manifest $ont_manifest" : ""
+    String epi2me_manifest_arg = epi2me_manifest && epi2me_manifest.exists() ? "--epi2me_manifest $epi2me_manifest" : ""
+    String ont_log_arg = ont_log && ont_log.exists() ? "--ont_log $ont_log" : ""
+    String epi2me_log_arg = epi2me_log && epi2me_log.exists() ? "--epi2me_log $epi2me_log" : ""
     """
     workflow-glue report wf-backup-report.html \
         $ont_manifest_arg \
@@ -247,10 +247,10 @@ workflow pipeline {
             )
         }
 
-        ont_manifest = ont_results ? ont_results.manifest : file("$projectDir/data/OPTIONAL_FILE")
-        epi2me_manifest = epi2me_results ? epi2me_results.manifest : file("$projectDir/data/OPTIONAL_FILE")
-        ont_log = ont_results ? ont_results.log : file("$projectDir/data/OPTIONAL_FILE")
-        epi2me_log = epi2me_results ? epi2me_results.log : file("$projectDir/data/OPTIONAL_FILE")
+        ont_manifest = ont_results ? ont_results.manifest : null
+        epi2me_manifest = epi2me_results ? epi2me_results.manifest : null
+        ont_log = ont_results ? ont_results.log : null
+        epi2me_log = epi2me_results ? epi2me_results.log : null
 
         report = makeReport(
             ont_manifest,
