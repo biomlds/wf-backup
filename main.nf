@@ -129,36 +129,59 @@ process backupEpi2meData {
         val true, emit: success
 
     script:
-    String src = "/home/source"
-    String dst = "/home/dest/epi2me_data"
+    String src = "/home/wfrsync/source"
+    String dst = "/home/wfrsync/dest/epi2me_data"
     """
     mkdir -p "$dst"
+    mkdir -p "$dst/output"
 
     echo "Starting EPI2ME data backup..." > backup_epi2me.log
     echo "Source: $source_path" >> backup_epi2me.log
     echo "Destination: $dst" >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
-    echo "Step 1: Initial rsync copy (first-level files only)..." >> backup_epi2me.log
+    echo "Step 1a: Initial rsync copy (source root, first-level files only)..." >> backup_epi2me.log
     rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' "$src/" "$dst/" >> backup_epi2me.log 2>&1
     RSYNC_INIT_EXIT=\$?
 
     if [ \$RSYNC_INIT_EXIT -ne 0 ]; then
-        echo "ERROR: Initial rsync failed with exit code \$RSYNC_INIT_EXIT" >> backup_epi2me.log
+        echo "ERROR: Initial rsync (source root) failed with exit code \$RSYNC_INIT_EXIT" >> backup_epi2me.log
         exit 1
     fi
-    echo "Initial copy completed successfully." >> backup_epi2me.log
+    echo "Initial copy (source root) completed successfully." >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
-    echo "Step 2: Verification rsync with checksum..." >> backup_epi2me.log
+    echo "Step 1b: Initial rsync copy (output folder, first-level files only)..." >> backup_epi2me.log
+    rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' "$src/output/" "$dst/output/" >> backup_epi2me.log 2>&1
+    RSYNC_INIT_EXIT2=\$?
+
+    if [ \$RSYNC_INIT_EXIT2 -ne 0 ]; then
+        echo "ERROR: Initial rsync (output folder) failed with exit code \$RSYNC_INIT_EXIT2" >> backup_epi2me.log
+        exit 1
+    fi
+    echo "Initial copy (output folder) completed successfully." >> backup_epi2me.log
+    echo "" >> backup_epi2me.log
+
+    echo "Step 2a: Verification rsync with checksum (source root)..." >> backup_epi2me.log
     rsync -avc --no-owner --no-group --numeric-ids --checksum --include='*' --exclude='*/*' "$src/" "$dst/" >> backup_epi2me.log 2>&1
     RSYNC_VERIFY_EXIT=\$?
 
     if [ \$RSYNC_VERIFY_EXIT -ne 0 ]; then
-        echo "ERROR: Verification rsync failed with exit code \$RSYNC_VERIFY_EXIT" >> backup_epi2me.log
+        echo "ERROR: Verification rsync (source root) failed with exit code \$RSYNC_VERIFY_EXIT" >> backup_epi2me.log
         exit 1
     fi
-    echo "Verification completed successfully." >> backup_epi2me.log
+    echo "Verification (source root) completed successfully." >> backup_epi2me.log
+    echo "" >> backup_epi2me.log
+
+    echo "Step 2b: Verification rsync with checksum (output folder)..." >> backup_epi2me.log
+    rsync -avc --no-owner --no-group --numeric-ids --checksum --include='*' --exclude='*/*' "$src/output/" "$dst/output/" >> backup_epi2me.log 2>&1
+    RSYNC_VERIFY_EXIT2=\$?
+
+    if [ \$RSYNC_VERIFY_EXIT2 -ne 0 ]; then
+        echo "ERROR: Verification rsync (output folder) failed with exit code \$RSYNC_VERIFY_EXIT2" >> backup_epi2me.log
+        exit 1
+    fi
+    echo "Verification (output folder) completed successfully." >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
     echo "Step 3: Generating manifest..." >> backup_epi2me.log
