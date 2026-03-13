@@ -249,8 +249,8 @@ workflow pipeline {
 
         ont_manifest = ont_results ? ont_results.manifest : file("$projectDir/data/OPTIONAL_ONT")
         epi2me_manifest = epi2me_results ? epi2me_results.manifest : file("$projectDir/data/OPTIONAL_EPI2ME")
-        ont_log = ont_results ? ont_results.log : file("$projectDir/data/OPTIONAL_ONT")
-        epi2me_log = epi2me_results ? epi2me_results.log : file("$projectDir/data/OPTIONAL_EPI2ME")
+        ont_log = ont_results ? ont_results.log : file("$projectDir/data/OPTIONAL_ONT_LOG")
+        epi2me_log = epi2me_results ? epi2me_results.log : file("$projectDir/data/OPTIONAL_EPI2ME_LOG")
 
         report = null
         if (ont_results || epi2me_results) {
