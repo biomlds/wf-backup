@@ -207,12 +207,14 @@ workflow pipeline {
         ont_results = null
         epi2me_results = null
 
+        def deleteSource = params.backup_options?.delete_source ?: params.delete_source ?: false
+
         if (ont_data_input) {
             ont_results = backupOntData(
                 build_done,
                 ont_data_input.source,
                 ont_data_input.dest,
-                params.backup_options.delete_source
+                deleteSource
             )
         }
 
@@ -221,7 +223,7 @@ workflow pipeline {
                 build_done,
                 epi2me_data_input.source,
                 epi2me_data_input.dest,
-                params.backup_options.delete_source
+                deleteSource
             )
         }
 
