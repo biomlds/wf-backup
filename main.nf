@@ -89,10 +89,10 @@ process backupOntData {
         echo "Step 3: Deleting source files..." >> backup_ont.log
         echo "DEBUG: Files in source before deletion:" >> backup_ont.log
         ls -la "$src" >> backup_ont.log 2>&1 || true
-        echo "DEBUG: Running: rm -rf $src/*" >> backup_ont.log
-        rm -rf "$src/*"
-        RM_EXIT=$?
-        echo "DEBUG: rm exit code: $RM_EXIT" >> backup_ont.log
+        echo "DEBUG: Running: rm -rf $src && mkdir -p $src" >> backup_ont.log
+        rm -rf "$src" && mkdir -p "$src"
+        RM_EXIT=\$?
+        echo "DEBUG: rm exit code: \$RM_EXIT" >> backup_ont.log
         echo "DEBUG: Files in source after deletion:" >> backup_ont.log
         ls -la "$src" >> backup_ont.log 2>&1 || true
         echo "Source files deleted." >> backup_ont.log
@@ -158,10 +158,10 @@ process backupEpi2meData {
         echo "Step 3: Deleting source files (backup verified)..." >> backup_epi2me.log
         echo "DEBUG: Files in source before deletion:" >> backup_epi2me.log
         ls -la "$src" >> backup_epi2me.log 2>&1 || true
-        echo "DEBUG: Running: rm -rf $src/*" >> backup_epi2me.log
-        rm -rf "$src/*"
-        RM_EXIT=$?
-        echo "DEBUG: rm exit code: $RM_EXIT" >> backup_epi2me.log
+        echo "DEBUG: Running: rm -rf $src && mkdir -p $src" >> backup_epi2me.log
+        rm -rf "$src" && mkdir -p "$src"
+        RM_EXIT=\$?
+        echo "DEBUG: rm exit code: \$RM_EXIT" >> backup_epi2me.log
         echo "DEBUG: Files in source after deletion:" >> backup_epi2me.log
         ls -la "$src" >> backup_epi2me.log 2>&1 || true
         echo "Source files deleted." >> backup_epi2me.log
