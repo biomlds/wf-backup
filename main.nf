@@ -48,6 +48,7 @@ process backupOntData {
         val delete_source
 
     publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_ont_data.json"
+    publishDir "${params.out_dir}", mode: 'copy', pattern: "backup_ont.log"
     cpus 1
     memory "1 GB"
 
@@ -109,6 +110,7 @@ process backupEpi2meData {
         val delete_source
 
     publishDir "${params.out_dir}", mode: 'copy', pattern: "manifest_epi2me_data.json"
+    publishDir "${params.out_dir}", mode: 'copy', pattern: "backup_epi2me.log"
     cpus 1
     memory "1 GB"
 
@@ -141,7 +143,7 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 2: Generating manifest..." >> backup_epi2me.log
-    generate_manifest.sh manifest_epi2me_data.json "epi2me_data" "$dst" 1
+    generate_manifest.sh manifest_epi2me_data.json "epi2me_data" "$dst"
     echo "Manifest created." >> backup_epi2me.log
     echo "" >> backup_epi2me.log
 
@@ -207,7 +209,7 @@ workflow pipeline {
         ont_results = null
         epi2me_results = null
 
-        def deleteSource = params.backup_options?.delete_source ?: params.delete_source ?: false
+        def deleteSource = params.backup_options?.delete_source == true || params.delete_source == true
 
         if (ont_data_input) {
             ont_results = backupOntData(
