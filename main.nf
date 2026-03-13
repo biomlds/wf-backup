@@ -129,8 +129,8 @@ process backupEpi2meData {
         val true, emit: success
 
     script:
-    String src = "/home//source"
-    String dst = "/home//dest/epi2me_data"
+    String src = "/home/source"
+    String dst = "/home/dest/epi2me_data"
     """
     mkdir -p "$dst"
     mkdir -p "$dst/output"
@@ -152,7 +152,7 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 1b: Initial rsync copy (output folder, first-level files only)..." >> backup_epi2me.log
-    rsync -av --no-owner --no-group --numeric-ids --include='*' --exclude='*/*' "$src/output/" "$dst/output/" >> backup_epi2me.log 2>&1
+    rsync -av --no-owner --no-group --numeric-ids --exclude='*/' "$src/output/" "$dst/output/" >> backup_epi2me.log 2>&1
     RSYNC_INIT_EXIT2=\$?
 
     if [ \$RSYNC_INIT_EXIT2 -ne 0 ]; then
@@ -174,7 +174,7 @@ process backupEpi2meData {
     echo "" >> backup_epi2me.log
 
     echo "Step 2b: Verification rsync with checksum (output folder)..." >> backup_epi2me.log
-    rsync -avc --no-owner --no-group --numeric-ids --checksum --include='*' --exclude='*/*' "$src/output/" "$dst/output/" >> backup_epi2me.log 2>&1
+    rsync -avc --no-owner --no-group --numeric-ids --checksum --exclude='*/' "$src/output/" "$dst/output/" >> backup_epi2me.log 2>&1
     RSYNC_VERIFY_EXIT2=\$?
 
     if [ \$RSYNC_VERIFY_EXIT2 -ne 0 ]; then
