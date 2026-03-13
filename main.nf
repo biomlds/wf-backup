@@ -86,7 +86,7 @@ process backupOntData {
 
     if [ "$do_delete" = "true" ]; then
         echo "Step 3: Deleting source files..." >> backup_ont.log
-        rm -rf "$src"
+        rm -rf "$src/*"
         echo "Source files deleted." >> backup_ont.log
     else
         echo "Step 3: Source files retained (delete_source=false)." >> backup_ont.log
@@ -147,7 +147,7 @@ process backupEpi2meData {
 
     if [ "$do_delete" = "true" ]; then
         echo "Step 3: Deleting source files (backup verified)..." >> backup_epi2me.log
-        rm -rf "$src"
+        rm -rf "$src/*"
         echo "Source files deleted." >> backup_epi2me.log
     else
         echo "Step 3: Source files retained (delete_source=false)." >> backup_epi2me.log
